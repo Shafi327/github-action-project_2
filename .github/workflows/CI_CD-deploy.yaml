@@ -36,7 +36,7 @@
 #         run: ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} 'cd /home/ubuntu/app && pm2 restart all'
 
 
-name: Deploy React to AWS EC2
+name: deploy the react js application to the aws ec2 instance.
 
 on:
   push:
@@ -48,36 +48,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: "18"
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18"
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Build React app
-      run: npm run build
+      - name: Build project
+        run: npm run build
 
-    - name: Verify build folder exists
-      run: ls -la build || echo "Build folder is missing!"
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: '.'
+          target: /home/ubuntu/app
 
-    - name: Create target directory on EC2
-      run: |
-        echo "${{ secrets.PRIVATE_KEY }}" > private_key.pem
-        chmod 600 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USER }}@${{ secrets.IP }} 'mkdir -p /home/ubuntu/app'
-
-    - name: Copy build files to EC2
-      run: |
-        scp -o StrictHostKeyChecking=no -i private_key.pem -r build/* ${{ secrets.USER }}@${{ secrets.IP }}:/home/ubuntu/app/
-
-    - name: Restart React app on EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USER }}@${{ secrets.IP }} << 'EOF'
-        pm2 restart all || pm2 start serve --name "react-app" -- -s /home/ubuntu/app -p 3000
-        exit
-        EOF
+      - name: Restart server
+        run: ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} 'cd /home/ubuntu/app && pm2 restart all'
