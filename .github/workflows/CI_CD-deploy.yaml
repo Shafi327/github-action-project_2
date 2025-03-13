@@ -30,9 +30,12 @@ jobs:
           host: ${{ secrets.IP }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.PRIVATE_KEY }}
-          source: ./out
+          source: "."
           target: /home/ubuntu/app
+          script: |
+            cd /home/ubuntu/app
+            pm2 delete all
+            npm install
+            pm2 start npm --name "my-app" -- start
       - name: Restart server
         run: ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} 'cd /home/ubuntu/app && pm2 restart all'
-
-
