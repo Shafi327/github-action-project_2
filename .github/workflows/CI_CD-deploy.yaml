@@ -11,12 +11,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Updated to the latest version
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3  # Updated to the latest version
+        uses: actions/setup-node@v3
         with:
-          node-version: "18"  # Update to the latest LTS version if needed
+          node-version: "18"  # Use the latest LTS version if needed
 
       - name: Install dependencies
         run: npm install
@@ -27,41 +27,85 @@ jobs:
       - name: Debug - List files after build
         run: ls -R  # Lists all files recursively to verify the build output
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.10  # Updated to the latest version
+      - name: Copy files to EC2 using SCP (Marketplace Action)
+        uses: appleboy/scp-action@v0.1.6
         with:
           host: ${{ secrets.IP }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.PRIVATE_KEY }}
-          source: .
-          target: /home/ubuntu/app
+          source: "build/*"
+          target: "/home/ubuntu/app"
 
-      # - name: Debug - Verify deployment on EC2
-        # run: |
-        #   ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} << 'EOF'
-        #   echo "Current directory: $(pwd)"
-        #   echo "Listing target directory:"
-        #   ls -R /home/ubuntu/app
-        #   EOF
+      - name: Install Node.js and npm on EC2 (Marketplace Action)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            if ! command -v node &> /dev/null; then
+              echo "Node.js is not installed. Installing Node.js and npm..."
+              curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            else
+              echo "Node.js is already installed."
+            fi
+            echo "Node.js version: $(node -v)"
+            echo "npm version: $(npm -v)"
 
-      - name: Debug - Check PM2 status
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} << 'EOF'
-          echo "Checking PM2 status:"
-          pm2 status
-          EOF
+      - name: Install PM2 on EC2 (Marketplace Action)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            if ! command -v pm2 &> /dev/null; then
+              echo "PM2 is not installed. Installing PM2..."
+              sudo npm install -g pm2
+            else
+              echo "PM2 is already installed."
+            fi
+            echo "PM2 version: $(pm2 -v)"
 
-      - name: Restart server
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} << 'EOF'
-          echo "Restarting PM2 processes:"
-          cd /home/ubuntu/app
-          pm2 restart all
-          EOF
+      - name: Debug - Verify deployment on EC2 (Marketplace Action)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo "Current directory: $(pwd)"
+            echo "Listing target directory:"
+            ls -R /home/ubuntu/app
 
-      - name: Debug - Verify PM2 restart
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} << 'EOF'
-          echo "Verifying PM2 status after restart:"
-          pm2 status
-          EOF
+      - name: Debug - Check PM2 status (Marketplace Action)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo "Checking PM2 status:"
+            pm2 status || echo "PM2 is not running any processes."
+
+      - name: Restart server (Marketplace Action)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo "Restarting PM2 processes:"
+            cd /home/ubuntu/app
+            pm2 restart all || echo "No PM2 processes to restart."
+
+      - name: Debug - Verify PM2 restart (Marketplace Action)
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.IP }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo "Verifying PM2 status after restart:"
+            pm2 status
