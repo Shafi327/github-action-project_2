@@ -1,42 +1,4 @@
-# name: deploy the react js application to the aws ec2 instance.
-
-# on:
-#   push:
-#     branches:
-#       - main
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v2
-
-#       - name: Set up Node.js
-#         uses: actions/setup-node@v2
-#         with:
-#           node-version: "18"
-
-#       - name: Install dependencies
-#         run: npm install
-
-#       - name: Build project
-#         run: npm run build
-
-#       - name: Deploy to EC2
-#         uses: appleboy/ssh-action@v0.1.2
-#         with:
-#           host: ${{ secrets.IP }}
-#           username: ${{ secrets.USER }}
-#           key: ${{ secrets.PRIVATE_KEY }}
-#           source: ./out
-#           target: /home/ubuntu/app
-#       - name: Restart server
-#         run: ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} 'cd /home/ubuntu/app && pm2 restart all'
-
-
-name: Deploy React App to AWS EC2
+name: deploy the react js application to the aws ec2 instance.
 
 on:
   push:
@@ -62,26 +24,15 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Deploy to EC2 via SSH
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.2
         with:
           host: ${{ secrets.IP }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.PRIVATE_KEY }}
-          port: 22
-          script: |
-            mkdir -p /home/ubuntu/app
-            rm -rf /home/ubuntu/app/*
-            exit
+          source: ./out
+          target: /home/ubuntu/app
+      - name: Restart server
+        run: ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} 'cd /home/ubuntu/app && pm2 restart all'
 
-      - name: Upload Build Files
-        run: |
-          scp -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} -r ./build/* ${{ secrets.USER }}@${{ secrets.IP }}:/home/ubuntu/app/
 
-      - name: Restart Server
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} << 'EOF'
-          cd /home/ubuntu/app
-          npm install --omit=dev
-          pm2 restart all || pm2 start npm --name "react-app" -- start
-          EOF
