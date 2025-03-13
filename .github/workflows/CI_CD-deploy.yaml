@@ -62,10 +62,17 @@ jobs:
     - name: Build React app
       run: npm run build
 
-    - name: Copy build files to EC2
+    - name: Verify build folder exists
+      run: ls -la build || echo "Build folder is missing!"
+
+    - name: Create target directory on EC2
       run: |
         echo "${{ secrets.PRIVATE_KEY }}" > private_key.pem
         chmod 600 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.USER }}@${{ secrets.IP }} 'mkdir -p /home/ubuntu/app'
+
+    - name: Copy build files to EC2
+      run: |
         scp -o StrictHostKeyChecking=no -i private_key.pem -r build/* ${{ secrets.USER }}@${{ secrets.IP }}:/home/ubuntu/app/
 
     - name: Restart React app on EC2
