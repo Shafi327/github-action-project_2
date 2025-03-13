@@ -30,7 +30,7 @@ jobs:
           host: ${{ secrets.IP }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.PRIVATE_KEY }}
-          source: .
+          source: ./out
           target: /home/ubuntu/app
       - name: Restart server
         run: ssh -o StrictHostKeyChecking=no -i ${{ secrets.PRIVATE_KEY }} ${{ secrets.USER }}@${{ secrets.IP }} 'cd /home/ubuntu/app && pm2 restart all'
