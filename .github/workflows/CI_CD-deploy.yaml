@@ -24,10 +24,12 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Debug - List files after build
-        run: ls -R  # Lists all files recursively to verify the build output
+      - name: Debug - Verify build output
+        run: |
+          echo "Listing files in the build directory:"
+          ls -R build
 
-      - name: Copy files to EC2 using SCP (Marketplace Action)
+      - name: Copy files to EC2 using drone-scp
         uses: appleboy/scp-action@v0.1.6
         with:
           host: ${{ secrets.IP }}
@@ -36,7 +38,7 @@ jobs:
           source: "build/*"
           target: "/home/ubuntu/app"
 
-      - name: Install Node.js and npm on EC2 (Marketplace Action)
+      - name: Install Node.js and npm on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.IP }}
@@ -53,7 +55,7 @@ jobs:
             echo "Node.js version: $(node -v)"
             echo "npm version: $(npm -v)"
 
-      - name: Install PM2 on EC2 (Marketplace Action)
+      - name: Install PM2 on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.IP }}
@@ -68,7 +70,7 @@ jobs:
             fi
             echo "PM2 version: $(pm2 -v)"
 
-      - name: Debug - Verify deployment on EC2 (Marketplace Action)
+      - name: Debug - Verify deployment on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.IP }}
@@ -79,17 +81,7 @@ jobs:
             echo "Listing target directory:"
             ls -R /home/ubuntu/app
 
-      - name: Debug - Check PM2 status (Marketplace Action)
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.IP }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            echo "Checking PM2 status:"
-            pm2 status || echo "PM2 is not running any processes."
-
-      - name: Restart server (Marketplace Action)
+      - name: Restart server
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.IP }}
@@ -99,13 +91,3 @@ jobs:
             echo "Restarting PM2 processes:"
             cd /home/ubuntu/app
             pm2 restart all || echo "No PM2 processes to restart."
-
-      - name: Debug - Verify PM2 restart (Marketplace Action)
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.IP }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            echo "Verifying PM2 status after restart:"
-            pm2 status
