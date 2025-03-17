@@ -21,13 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Build project
-      #   run: npm run build
+      - name: Build project
+        run: npm run build
 
-      # - name: Debug - Verify build output
-      #   run: |
-      #     echo "Listing files in the build directory:"
-      #     ls -R build
+      - name: Debug - Verify build output
+        run: |
+          echo "Listing files in the build directory:"
+          ls -R build
 
       - name: Copy files to EC2 using drone-scp
         uses: appleboy/scp-action@v0.1.6
