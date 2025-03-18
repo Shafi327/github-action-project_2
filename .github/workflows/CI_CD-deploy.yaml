@@ -35,7 +35,7 @@ jobs:
           host: ${{ secrets.IP }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.PRIVATE_KEY }}
-          source: "."
+          source: '.'
           target: "/home/ubuntu/app"
 
       - name: Install Node.js and npm on EC2
