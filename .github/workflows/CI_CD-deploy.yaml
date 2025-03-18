@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18" # Use the latest LTS version if needed
+          node-version: "18"  # Use the latest LTS version if needed
 
       - name: Install dependencies
         run: npm install
@@ -37,7 +37,6 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           source: "."
           target: "/home/ubuntu/app"
-          timeout: "300s" # Set timeout to 300 seconds (5 minutes)
 
       - name: Install Node.js and npm on EC2
         uses: appleboy/ssh-action@v0.1.10
