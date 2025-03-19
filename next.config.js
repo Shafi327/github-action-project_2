@@ -32,11 +32,7 @@ const nextConfig = {
   // !!! for docker (`output: 'standalone'`)
   // This will create a folder at .next/standalone which can then be deployed on its own without installing node_modules.
 
-  output: dockerDeploymentEnabled
-    ? "standalone"
-    : !exportHtmlEnabled
-    ? undefined
-    : "export",
+  output: "export",
 
   // image optimize
   images: {
@@ -59,45 +55,24 @@ const nextConfig = {
   env: {
     exportHtml: `${exportHtmlEnabled}`,
   },
-  /*
-
-    // change the api route
-    async rewrites() {
-        return [
-            {
-                source: '/core-api/posts',
-                destination: '/api/posts',
-            }
-        ]
-    },
-
-    async redirects() {
-        return [
-            {
-                source: '/',
-                destination: process.env.NODE_ENV === 'development' ? '/index.html' : '/',
-                permanent: true,
-            },
-        ]
-    },
-    async headers() {
-        return [
-            {
-                source: '/about',
-                headers: [
-                    {
-                        key: 'x-custom-header',
-                        value: 'my custom header value',
-                    },
-                    {
-                        key: 'x-another-custom-header',
-                        value: 'my other custom header value',
-                    },
-                ],
-            },
-        ]
-    },
-    */
+  // Remove or comment out middleware, rewrites, and redirects
+  // rewrites: async () => [
+  //   {
+  //     source: '/old-path',
+  //     destination: '/new-path',
+  //   },
+  // ],
+  // redirects: async () => [
+  //   {
+  //     source: '/old-url',
+  //     destination: '/new-url',
+  //     permanent: true,
+  //   },
+  // ],
+  // middleware: (req, res, next) => {
+  //   // Middleware logic here
+  //   next();
+  // },
 };
 
 module.exports = nextConfig;
